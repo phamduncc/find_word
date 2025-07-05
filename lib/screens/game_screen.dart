@@ -33,7 +33,9 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _initializeGame() {
-    final settings = widget.settings ?? const GameSettings();
+    // Get settings from route arguments or widget parameter
+    final routeSettings = ModalRoute.of(context)?.settings.arguments as GameSettings?;
+    final settings = routeSettings ?? widget.settings ?? const GameSettings();
     _gameSession = GameEngine.createNewGame(settings);
     _gameSession = GameEngine.startGame(_gameSession);
   }
@@ -192,14 +194,18 @@ class _GameScreenState extends State<GameScreen> {
 
               // Letter grid
               Expanded(
-                flex: 2,
+                flex: 3,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingM),
-                  child: LetterGrid(
-                    letters: _gameSession.letters,
-                    selectedIndices: _gameSession.selectedLetterIndices,
-                    onLetterTap: _onLetterTap,
-                    columns: 4,
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: LetterGrid(
+                        letters: _gameSession.letters,
+                        selectedIndices: _gameSession.selectedLetterIndices,
+                        onLetterTap: _onLetterTap,
+                        columns: _getOptimalColumns(_gameSession.letters.length),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -279,5 +285,20 @@ class _GameScreenState extends State<GameScreen> {
         ),
       ),
     );
+  }
+
+  /// Calculate optimal number of columns based on letter count
+  int _getOptimalColumns(int letterCount) {
+    switch (letterCount) {
+      case 9:  // Easy: 3x3 grid
+        return 3;
+      case 12: // Medium: 4x3 grid
+        return 4;
+      case 15: // Hard: 5x3 grid
+        return 5;
+      default:
+        // Fallback: calculate square-ish grid
+        return (letterCount / 4).ceil().clamp(3, 5);
+    }
   }
 }

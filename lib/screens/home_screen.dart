@@ -52,10 +52,13 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _startGame() async {
-    final appProvider = context.read<AppProvider>();
-    await appProvider.startNewGame();
+    final settingsProvider = context.read<SettingsProvider>();
     if (context.mounted) {
-      Navigator.pushNamed(context, '/game');
+      Navigator.pushNamed(
+        context,
+        '/game',
+        arguments: settingsProvider.settings,
+      );
     }
   }
 

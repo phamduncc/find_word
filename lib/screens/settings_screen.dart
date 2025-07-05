@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_constants.dart';
 import '../widgets/widgets.dart';
 import '../models/models.dart';
+import '../providers/settings_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -27,8 +29,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _loadSettings() {
-    // TODO: Load from SharedPreferences
-    _settings = const GameSettings();
+    // Load from provider
+    _settings = context.read<SettingsProvider>().settings;
     _playerNameController.text = _settings.playerName;
   }
 
@@ -41,6 +43,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _settings = newSettings;
     });
+    // Save to provider
+    context.read<SettingsProvider>().updateSettings(newSettings);
   }
 
   @override
@@ -263,10 +267,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
+                        '${difficulty.letterCount} letters',
+                        style: TextStyle(
+                          color: isSelected ? Colors.white70 : Colors.white54,
+                          fontSize: 11,
+                        ),
+                      ),
+                      Text(
                         '${difficulty.timeLimit}s',
                         style: TextStyle(
                           color: isSelected ? Colors.white70 : Colors.white54,
-                          fontSize: 12,
+                          fontSize: 11,
                         ),
                       ),
                     ],

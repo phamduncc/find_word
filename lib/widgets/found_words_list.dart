@@ -22,13 +22,14 @@ class FoundWordsList extends StatelessWidget {
         padding: const EdgeInsets.all(AppConstants.spacingL),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.search,
-              size: 48,
+              size: 32,
               color: Colors.grey.shade400,
             ),
-            const SizedBox(height: AppConstants.spacingM),
+            const SizedBox(height: AppConstants.spacingS),
             Text(
               'Words found:',
               style: TextStyle(

@@ -43,7 +43,7 @@ extension DifficultyExtension on Difficulty {
   int get minWordLength {
     switch (this) {
       case Difficulty.easy:
-        return 3;
+        return 2;
       case Difficulty.medium:
         return 3;
       case Difficulty.hard:

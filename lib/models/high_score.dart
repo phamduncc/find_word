@@ -126,14 +126,39 @@ class HighScoreManager {
     List<HighScore> existingScores,
     HighScore newScore,
   ) {
+    // Check if this score qualifies first
+    if (!isHighScore(existingScores, newScore.score, newScore.difficulty)) {
+      return existingScores; // Score doesn't qualify, return unchanged
+    }
+
     final allScores = List<HighScore>.from(existingScores)..add(newScore);
     final topScores = getTopScores(allScores, newScore.difficulty);
-    
+
     // Keep all scores from other difficulties
     final otherDifficultyScores = allScores
         .where((score) => score.difficulty != newScore.difficulty)
         .toList();
-    
+
     return [...otherDifficultyScores, ...topScores];
+  }
+
+  /// Remove duplicate scores (same player, score, and time within 1 second)
+  static List<HighScore> removeDuplicates(List<HighScore> scores) {
+    final uniqueScores = <HighScore>[];
+
+    for (final score in scores) {
+      final isDuplicate = uniqueScores.any((existing) =>
+        existing.playerName == score.playerName &&
+        existing.score == score.score &&
+        existing.difficulty == score.difficulty &&
+        existing.achievedAt.difference(score.achievedAt).abs().inSeconds < 2
+      );
+
+      if (!isDuplicate) {
+        uniqueScores.add(score);
+      }
+    }
+
+    return uniqueScores;
   }
 }

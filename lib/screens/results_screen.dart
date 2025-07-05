@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_constants.dart';
 import '../widgets/widgets.dart';
 import '../models/models.dart';
+import '../providers/providers.dart';
 
 class ResultsScreen extends StatefulWidget {
   final GameSession gameSession;
@@ -18,6 +20,7 @@ class _ResultsScreenState extends State<ResultsScreen>
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  bool _isNewHighScore = false;
 
   @override
   void initState() {
@@ -51,6 +54,9 @@ class _ResultsScreenState extends State<ResultsScreen>
 
     _fadeController.forward();
     _slideController.forward();
+
+    // Check and save high score
+    _checkHighScore();
   }
 
   @override
@@ -61,14 +67,83 @@ class _ResultsScreenState extends State<ResultsScreen>
   }
 
   void _playAgain() {
-    Navigator.pushReplacementNamed(context, '/game');
+    Navigator.pushReplacementNamed(
+      context,
+      '/game',
+      arguments: widget.gameSession.settings,
+    );
   }
 
   void _goHome() {
     Navigator.pushNamedAndRemoveUntil(
       context,
-      '/',
+      '/home',
       (route) => false,
+    );
+  }
+
+  void _viewLeaderboard() {
+    Navigator.pushNamed(context, '/leaderboard');
+  }
+
+  Future<void> _checkHighScore() async {
+    final highScoreProvider = context.read<HighScoreProvider>();
+    final isNewHighScore = await highScoreProvider.addHighScore(widget.gameSession);
+
+    if (mounted) {
+      setState(() {
+        _isNewHighScore = isNewHighScore;
+      });
+
+      if (isNewHighScore) {
+        _showHighScoreDialog();
+      }
+    }
+  }
+
+  void _showHighScoreDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppConstants.primaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.emoji_events, color: Colors.amber, size: 32),
+            SizedBox(width: 8),
+            Text(
+              'New High Score!',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'Congratulations! You achieved a new high score of ${widget.gameSession.totalScore} points!',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _viewLeaderboard();
+            },
+            child: const Text(
+              'View Leaderboard',
+              style: TextStyle(color: Colors.amber),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Continue',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -279,23 +354,37 @@ class _ResultsScreenState extends State<ResultsScreen>
                         const SizedBox(height: AppConstants.spacingL),
 
                         // Action buttons
-                        Row(
+                        Column(
                           children: [
-                            Expanded(
-                              child: GameButton(
-                                text: 'PLAY AGAIN',
-                                onPressed: _playAgain,
-                                backgroundColor: Colors.green.shade600,
-                                icon: Icons.refresh,
-                              ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: GameButton(
+                                    text: 'PLAY AGAIN',
+                                    onPressed: _playAgain,
+                                    backgroundColor: Colors.green.shade600,
+                                    icon: Icons.refresh,
+                                  ),
+                                ),
+                                const SizedBox(width: AppConstants.spacingM),
+                                Expanded(
+                                  child: GameButton(
+                                    text: 'HOME',
+                                    onPressed: _goHome,
+                                    backgroundColor: Colors.orange.shade600,
+                                    icon: Icons.home,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: AppConstants.spacingM),
-                            Expanded(
+                            const SizedBox(height: AppConstants.spacingM),
+                            SizedBox(
+                              width: double.infinity,
                               child: GameButton(
-                                text: 'HOME',
-                                onPressed: _goHome,
-                                backgroundColor: Colors.orange.shade600,
-                                icon: Icons.home,
+                                text: _isNewHighScore ? 'VIEW LEADERBOARD ⭐' : 'VIEW LEADERBOARD',
+                                onPressed: _viewLeaderboard,
+                                backgroundColor: _isNewHighScore ? Colors.amber.shade600 : Colors.purple.shade600,
+                                icon: Icons.leaderboard,
                               ),
                             ),
                           ],

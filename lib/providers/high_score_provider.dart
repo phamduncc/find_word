@@ -30,6 +30,8 @@ class HighScoreProvider extends ChangeNotifier {
       _setError(null);
 
       _highScores = StorageService.loadHighScores();
+      // Remove any duplicates that might exist
+      _highScores = HighScoreManager.removeDuplicates(_highScores);
       // Sort by score descending
       _highScores.sort((a, b) => b.score.compareTo(a.score));
 
@@ -64,20 +66,18 @@ class HighScoreProvider extends ChangeNotifier {
         gameDuration: gameSession.duration,
       );
 
-      // Check if this qualifies as a high score
-      final isHighScore = _isQualifyingScore(newScore);
-      
+      // Use HighScoreManager to properly handle adding scores per difficulty
+      _highScores = HighScoreManager.addHighScore(_highScores, newScore);
+
+      // Check if this was actually added (qualifies as high score)
+      final difficultyScores = HighScoreManager.getTopScores(_highScores, newScore.difficulty);
+      final isHighScore = difficultyScores.any((score) =>
+        score.playerName == newScore.playerName &&
+        score.score == newScore.score &&
+        score.achievedAt == newScore.achievedAt
+      );
+
       if (isHighScore) {
-        _highScores.add(newScore);
-        
-        // Sort by score descending
-        _highScores.sort((a, b) => b.score.compareTo(a.score));
-        
-        // Keep only top scores
-        if (_highScores.length > AppConstants.maxHighScores) {
-          _highScores = _highScores.take(AppConstants.maxHighScores).toList();
-        }
-        
         await _saveHighScores();
         notifyListeners();
       }
