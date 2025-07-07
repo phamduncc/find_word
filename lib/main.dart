@@ -5,10 +5,12 @@ import 'providers/providers.dart';
 import 'screens/screens.dart';
 import 'models/models.dart';
 import 'services/haptic_service.dart';
+import 'services/tts_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await HapticService.initialize();
+  await TTSService.initialize();
   runApp(const FindWordsApp());
 }
 
@@ -54,6 +56,7 @@ class FindWordsApp extends StatelessWidget {
               '/settings': (context) => const SettingsScreen(),
               '/leaderboard': (context) => const LeaderboardScreen(),
               '/achievements': (context) => const AchievementsScreen(),
+              '/my-dictionary': (context) => const MyDictionaryScreen(),
             },
             onGenerateRoute: (settings) {
               switch (settings.name) {

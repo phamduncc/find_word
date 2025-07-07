@@ -126,7 +126,7 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Submit the current word
-  Future<GameSubmissionResult> submitWord() async {
+  Future<GameSubmissionResult> submitWord({GameSettings? gameSettings}) async {
     if (_currentSession == null || !_currentSession!.isActive) {
       return GameSubmissionResult(
         success: false,
@@ -136,7 +136,11 @@ class GameProvider extends ChangeNotifier {
     }
 
     try {
-      final result = await GameEngine.submitWord(_currentSession!, comboManager: _comboManager);
+      final result = await GameEngine.submitWord(
+        _currentSession!,
+        comboManager: _comboManager,
+        gameSettings: gameSettings,
+      );
       _currentSession = result.updatedSession;
       notifyListeners();
       return result;

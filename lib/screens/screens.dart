@@ -5,3 +5,4 @@ export 'results_screen.dart';
 export 'settings_screen.dart';
 export 'leaderboard_screen.dart';
 export 'achievements_screen.dart';
+export 'my_dictionary_screen.dart';

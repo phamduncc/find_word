@@ -47,6 +47,10 @@ dependencies:
   # Haptic feedback and vibration
   # vibration: ^1.8.4  # Temporarily disabled due to network issues
 
+  # Learning Mode features
+  # flutter_tts: ^3.8.5  # Text-to-speech for word pronunciation (disabled due to compatibility issues)
+  http: ^1.1.0  # HTTP requests for dictionary API
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

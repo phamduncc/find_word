@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import '../constants/app_constants.dart';
 import '../widgets/widgets.dart';
+import '../widgets/word_definition_dialog.dart';
+import '../widgets/learning_mode_indicator.dart';
 import '../models/models.dart';
 import '../models/combo_system.dart';
 import '../services/services.dart';
@@ -133,7 +135,9 @@ class _GameScreenState extends State<GameScreen> {
     await HapticService.mediumImpact();
     await Future.delayed(const Duration(milliseconds: 200));
 
-    final result = await gameProvider.submitWord();
+    // Get settings for Learning Mode
+    final settingsProvider = context.read<SettingsProvider>();
+    final result = await gameProvider.submitWord(gameSettings: settingsProvider.settings);
 
     // Calculate time taken to find word
     double timeToFind = 0.0;
@@ -206,6 +210,19 @@ class _GameScreenState extends State<GameScreen> {
 
         // Show time bonus animation
         TimeBonusOverlay.show(context, word.score);
+
+        // Show Learning Mode definition dialog if enabled
+        final settingsProvider = context.read<SettingsProvider>();
+        if (settingsProvider.settings.learningModeEnabled &&
+            settingsProvider.settings.showDefinitions &&
+            word.definition != null) {
+          // Delay to allow other animations to complete
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) {
+              _showWordDefinitionDialog(word);
+            }
+          });
+        }
       }
 
       // Show achievement notifications if any were unlocked
@@ -226,6 +243,29 @@ class _GameScreenState extends State<GameScreen> {
     } else {
       _showErrorMessage(result.message);
     }
+  }
+
+  void _showWordDefinitionDialog(Word word) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => WordDefinitionDialog(
+        word: word,
+        onSaveToMyDictionary: () {
+          // Optional: Show feedback that word was saved
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Added "${word.text}" to My Dictionary'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        onClose: () {
+          // Optional: Handle dialog close
+        },
+      ),
+    );
   }
 
   void _onClearSelection() async {
@@ -335,13 +375,27 @@ class _GameScreenState extends State<GameScreen> {
                         return const SizedBox.shrink();
                       },
                     ),
-                    Text(
-                      'SCORE: ${_gameSession.totalScore}',
-                      style: const TextStyle(
-                        color: Colors.yellow,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Column(
+                      children: [
+                        Text(
+                          'SCORE: ${_gameSession.totalScore}',
+                          style: const TextStyle(
+                            color: Colors.yellow,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Consumer<SettingsProvider>(
+                          builder: (context, settingsProvider, child) {
+                            return LearningModeIndicator(
+                              isEnabled: settingsProvider.settings.learningModeEnabled,
+                              showLabel: false,
+                              size: 16,
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),

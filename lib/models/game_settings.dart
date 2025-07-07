@@ -7,6 +7,10 @@ class GameSettings {
   final bool vibrationEnabled;
   final bool showHints;
   final String playerName;
+  final bool learningModeEnabled;
+  final bool autoSaveWords;
+  final bool showDefinitions;
+  final bool enablePronunciation;
 
   const GameSettings({
     this.difficulty = Difficulty.medium,
@@ -14,6 +18,10 @@ class GameSettings {
     this.vibrationEnabled = true,
     this.showHints = true,
     this.playerName = 'Player',
+    this.learningModeEnabled = false,
+    this.autoSaveWords = true,
+    this.showDefinitions = true,
+    this.enablePronunciation = true,
   });
 
   /// Create a copy with modified values
@@ -23,6 +31,10 @@ class GameSettings {
     bool? vibrationEnabled,
     bool? showHints,
     String? playerName,
+    bool? learningModeEnabled,
+    bool? autoSaveWords,
+    bool? showDefinitions,
+    bool? enablePronunciation,
   }) {
     return GameSettings(
       difficulty: difficulty ?? this.difficulty,
@@ -30,6 +42,10 @@ class GameSettings {
       vibrationEnabled: vibrationEnabled ?? this.vibrationEnabled,
       showHints: showHints ?? this.showHints,
       playerName: playerName ?? this.playerName,
+      learningModeEnabled: learningModeEnabled ?? this.learningModeEnabled,
+      autoSaveWords: autoSaveWords ?? this.autoSaveWords,
+      showDefinitions: showDefinitions ?? this.showDefinitions,
+      enablePronunciation: enablePronunciation ?? this.enablePronunciation,
     );
   }
 
@@ -41,6 +57,10 @@ class GameSettings {
       'vibrationEnabled': vibrationEnabled,
       'showHints': showHints,
       'playerName': playerName,
+      'learningModeEnabled': learningModeEnabled,
+      'autoSaveWords': autoSaveWords,
+      'showDefinitions': showDefinitions,
+      'enablePronunciation': enablePronunciation,
     };
   }
 
@@ -52,6 +72,10 @@ class GameSettings {
       vibrationEnabled: json['vibrationEnabled'] as bool? ?? true,
       showHints: json['showHints'] as bool? ?? true,
       playerName: json['playerName'] as String? ?? 'Player',
+      learningModeEnabled: json['learningModeEnabled'] as bool? ?? false,
+      autoSaveWords: json['autoSaveWords'] as bool? ?? true,
+      showDefinitions: json['showDefinitions'] as bool? ?? true,
+      enablePronunciation: json['enablePronunciation'] as bool? ?? true,
     );
   }
 
@@ -63,7 +87,11 @@ class GameSettings {
         other.soundEnabled == soundEnabled &&
         other.vibrationEnabled == vibrationEnabled &&
         other.showHints == showHints &&
-        other.playerName == playerName;
+        other.playerName == playerName &&
+        other.learningModeEnabled == learningModeEnabled &&
+        other.autoSaveWords == autoSaveWords &&
+        other.showDefinitions == showDefinitions &&
+        other.enablePronunciation == enablePronunciation;
   }
 
   @override
@@ -74,6 +102,10 @@ class GameSettings {
       vibrationEnabled,
       showHints,
       playerName,
+      learningModeEnabled,
+      autoSaveWords,
+      showDefinitions,
+      enablePronunciation,
     );
   }
 
@@ -81,6 +113,8 @@ class GameSettings {
   String toString() {
     return 'GameSettings(difficulty: $difficulty, soundEnabled: $soundEnabled, '
         'vibrationEnabled: $vibrationEnabled, showHints: $showHints, '
-        'playerName: $playerName)';
+        'playerName: $playerName, learningModeEnabled: $learningModeEnabled, '
+        'autoSaveWords: $autoSaveWords, showDefinitions: $showDefinitions, '
+        'enablePronunciation: $enablePronunciation)';
   }
 }

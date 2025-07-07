@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:math';
 import '../models/models.dart';
 import '../models/combo_system.dart';
+import '../models/learned_word.dart';
 import 'letter_generator.dart';
+import 'dictionary_service.dart';
+import 'my_dictionary_service.dart';
 import 'word_validator.dart';
 import 'haptic_service.dart';
 
@@ -126,7 +129,11 @@ class GameEngine {
   }
 
   /// Submit the current word
-  static Future<GameSubmissionResult> submitWord(GameSession session, {ComboManager? comboManager}) async {
+  static Future<GameSubmissionResult> submitWord(
+    GameSession session, {
+    ComboManager? comboManager,
+    GameSettings? gameSettings,
+  }) async {
     if (session.state != GameState.playing) {
       await HapticService.error();
       return GameSubmissionResult(
@@ -174,10 +181,27 @@ class GameEngine {
       );
     }
 
+    // Calculate time to find word
+    final timeToFind = session.startTime != null
+        ? DateTime.now().difference(session.startTime!).inSeconds.toDouble()
+        : 0.0;
+
+    // Get word definition if Learning Mode is enabled
+    WordDefinition? definition;
+    if (gameSettings?.learningModeEnabled == true && gameSettings?.showDefinitions == true) {
+      try {
+        definition = await DictionaryService.getDefinition(session.currentInput);
+      } catch (e) {
+        print('Failed to get definition for ${session.currentInput}: $e');
+      }
+    }
+
     // Create the word and add to found words
     final word = Word.create(
       text: session.currentInput,
       letterIndices: session.selectedLetterIndices,
+      definition: definition,
+      timeToFind: timeToFind,
     );
 
     // Add word to combo system
@@ -198,6 +222,22 @@ class GameEngine {
     );
 
     final finalSession = addTimeBonus(sessionWithWord, finalScore);
+
+    // Save to My Dictionary if Learning Mode is enabled and auto-save is on
+    if (gameSettings?.learningModeEnabled == true &&
+        gameSettings?.autoSaveWords == true &&
+        definition != null) {
+      try {
+        final learnedWord = LearnedWord.fromWordAndDefinition(
+          finalWord.text,
+          definition,
+          timeToFind: timeToFind,
+        );
+        await MyDictionaryService.addLearnedWord(learnedWord);
+      } catch (e) {
+        print('Failed to save word to My Dictionary: $e');
+      }
+    }
 
     // Haptic feedback based on word length and combo
     await HapticService.wordFound(word.text.length);

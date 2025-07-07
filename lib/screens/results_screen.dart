@@ -86,6 +86,10 @@ class _ResultsScreenState extends State<ResultsScreen>
     Navigator.pushNamed(context, '/leaderboard');
   }
 
+  void _viewMyDictionary() {
+    Navigator.pushNamed(context, '/my-dictionary');
+  }
+
   Future<void> _checkHighScore() async {
     final highScoreProvider = context.read<HighScoreProvider>();
     final achievementProvider = context.read<AchievementProvider>();
@@ -397,6 +401,29 @@ class _ResultsScreenState extends State<ResultsScreen>
                                 backgroundColor: _isNewHighScore ? Colors.amber.shade600 : Colors.purple.shade600,
                                 icon: Icons.leaderboard,
                               ),
+                            ),
+
+                            // My Dictionary button (only show if Learning Mode is enabled)
+                            Consumer<SettingsProvider>(
+                              builder: (context, settingsProvider, child) {
+                                if (settingsProvider.settings.learningModeEnabled) {
+                                  return Column(
+                                    children: [
+                                      const SizedBox(height: AppConstants.spacingM),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: GameButton(
+                                          text: 'MY DICTIONARY',
+                                          onPressed: _viewMyDictionary,
+                                          backgroundColor: Colors.indigo.shade600,
+                                          icon: Icons.book,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
                             ),
                           ],
                         ),

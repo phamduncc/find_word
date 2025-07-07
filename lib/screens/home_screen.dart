@@ -74,141 +74,162 @@ class _HomeScreenState extends State<HomeScreen>
     Navigator.pushNamed(context, '/achievements');
   }
 
+  void _openMyDictionary() {
+    Navigator.pushNamed(context, '/my-dictionary');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFFFF5722), // Orange-red like in the image
-              Color(0xFFE91E63), // Pink-red
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: SingleChildScrollView(
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFFF5722), // Orange-red like in the image
+                Color(0xFFE91E63), // Pink-red
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppConstants.spacingL),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Crown icon
-                        Container(
-                          margin: const EdgeInsets.only(bottom: AppConstants.spacingL),
-                          child: Icon(
-                            Icons.emoji_events,
-                            size: 80,
-                            color: Colors.yellow.shade600,
+          child: SafeArea(
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppConstants.spacingL),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Crown icon
+                          Container(
+                            margin: const EdgeInsets.only(bottom: AppConstants.spacingL),
+                            child: Icon(
+                              Icons.emoji_events,
+                              size: 80,
+                              color: Colors.yellow.shade600,
+                            ),
                           ),
-                        ),
-                        
-                        // App title
-                        Container(
-                          padding: const EdgeInsets.all(AppConstants.spacingL),
-                          decoration: BoxDecoration(
-                            color: Colors.pink.shade600,
-                            borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              const Text(
-                                'KING',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
+                          
+                          // App title
+                          Container(
+                            padding: const EdgeInsets.all(AppConstants.spacingL),
+                            decoration: BoxDecoration(
+                              color: Colors.pink.shade600,
+                              borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
                                 ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppConstants.spacingM,
-                                  vertical: AppConstants.spacingXS,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.yellow.shade600,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text(
-                                  'OF',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: AppConstants.spacingS),
-                              Container(
-                                padding: const EdgeInsets.all(AppConstants.spacingM),
-                                decoration: BoxDecoration(
-                                  color: Colors.teal.shade600,
-                                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                                ),
-                                child: const Text(
-                                  'ENGLISH',
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'KING',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 32,
+                                    fontSize: 48,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-                            ],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppConstants.spacingM,
+                                    vertical: AppConstants.spacingXS,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.yellow.shade600,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    'OF',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppConstants.spacingS),
+                                Container(
+                                  padding: const EdgeInsets.all(AppConstants.spacingM),
+                                  decoration: BoxDecoration(
+                                    color: Colors.teal.shade600,
+                                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                                  ),
+                                  child: const Text(
+                                    'ENGLISH',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        
-                        const SizedBox(height: AppConstants.spacingXL * 2),
-                        
-                        // Menu buttons
-                        MenuButton(
-                          text: 'START GAME',
-                          backgroundColor: Colors.yellow.shade600,
-                          onPressed: _startGame,
-                          icon: Icons.play_arrow,
-                        ),
-                        
-                        MenuButton(
-                          text: 'SETTINGS',
-                          backgroundColor: Colors.pink.shade600,
-                          onPressed: _openSettings,
-                          icon: Icons.settings,
-                        ),
-                        
-                        MenuButton(
-                          text: 'LEADERBOARD',
-                          backgroundColor: Colors.teal.shade600,
-                          onPressed: _openLeaderboard,
-                          icon: Icons.leaderboard,
-                        ),
-
-                        MenuButton(
-                          text: 'ACHIEVEMENTS',
-                          backgroundColor: Colors.purple.shade600,
-                          onPressed: _openAchievements,
-                          icon: Icons.emoji_events,
-                        ),
-                      ],
+                          
+                          const SizedBox(height: AppConstants.spacingXL * 2),
+                          
+                          // Menu buttons
+                          MenuButton(
+                            text: 'START GAME',
+                            backgroundColor: Colors.yellow.shade600,
+                            onPressed: _startGame,
+                            icon: Icons.play_arrow,
+                          ),
+                          
+                          MenuButton(
+                            text: 'SETTINGS',
+                            backgroundColor: Colors.pink.shade600,
+                            onPressed: _openSettings,
+                            icon: Icons.settings,
+                          ),
+                          
+                          MenuButton(
+                            text: 'LEADERBOARD',
+                            backgroundColor: Colors.teal.shade600,
+                            onPressed: _openLeaderboard,
+                            icon: Icons.leaderboard,
+                          ),
+        
+                          MenuButton(
+                            text: 'ACHIEVEMENTS',
+                            backgroundColor: Colors.purple.shade600,
+                            onPressed: _openAchievements,
+                            icon: Icons.emoji_events,
+                          ),
+        
+                          Consumer<SettingsProvider>(
+                            builder: (context, settingsProvider, child) {
+                              // Only show My Dictionary if Learning Mode is enabled
+                              if (settingsProvider.settings.learningModeEnabled) {
+                                return MenuButton(
+                                  text: 'MY DICTIONARY',
+                                  backgroundColor: Colors.indigo.shade600,
+                                  onPressed: _openMyDictionary,
+                                  icon: Icons.book,
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),

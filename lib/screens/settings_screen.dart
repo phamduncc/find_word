@@ -133,6 +133,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                       const SizedBox(height: AppConstants.spacingL),
 
+                      // Learning Mode section
+                      _buildSection(
+                        title: 'Learning Mode',
+                        children: [
+                          _buildSwitchTile(
+                            title: 'Enable Learning Mode',
+                            subtitle: 'Show word definitions and pronunciation',
+                            value: _settings.learningModeEnabled,
+                            onChanged: (value) {
+                              _updateSettings(_settings.copyWith(learningModeEnabled: value));
+                            },
+                          ),
+                          if (_settings.learningModeEnabled) ...[
+                            _buildSwitchTile(
+                              title: 'Auto-save Words',
+                              subtitle: 'Automatically save found words to My Dictionary',
+                              value: _settings.autoSaveWords,
+                              onChanged: (value) {
+                                _updateSettings(_settings.copyWith(autoSaveWords: value));
+                              },
+                            ),
+                            _buildSwitchTile(
+                              title: 'Show Definitions',
+                              subtitle: 'Display word meanings after finding them',
+                              value: _settings.showDefinitions,
+                              onChanged: (value) {
+                                _updateSettings(_settings.copyWith(showDefinitions: value));
+                              },
+                            ),
+                            _buildSwitchTile(
+                              title: 'Enable Pronunciation',
+                              subtitle: 'Allow word pronunciation with TTS',
+                              value: _settings.enablePronunciation,
+                              onChanged: (value) {
+                                _updateSettings(_settings.copyWith(enablePronunciation: value));
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      const SizedBox(height: AppConstants.spacingL),
+
                       // About section
                       _buildSection(
                         title: 'About',
