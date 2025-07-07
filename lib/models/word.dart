@@ -78,6 +78,21 @@ class Word {
   @override
   int get hashCode => text.hashCode;
 
+  /// Create a copy of this word with optional parameter overrides
+  Word copyWith({
+    String? text,
+    int? score,
+    DateTime? foundAt,
+    List<int>? letterIndices,
+  }) {
+    return Word(
+      text: text ?? this.text,
+      score: score ?? this.score,
+      foundAt: foundAt ?? this.foundAt,
+      letterIndices: letterIndices ?? this.letterIndices,
+    );
+  }
+
   @override
   String toString() {
     return 'Word(text: $text, score: $score, foundAt: $foundAt)';

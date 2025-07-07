@@ -70,6 +70,10 @@ class _HomeScreenState extends State<HomeScreen>
     Navigator.pushNamed(context, '/leaderboard');
   }
 
+  void _openAchievements() {
+    Navigator.pushNamed(context, '/achievements');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,6 +195,13 @@ class _HomeScreenState extends State<HomeScreen>
                           backgroundColor: Colors.teal.shade600,
                           onPressed: _openLeaderboard,
                           icon: Icons.leaderboard,
+                        ),
+
+                        MenuButton(
+                          text: 'ACHIEVEMENTS',
+                          backgroundColor: Colors.purple.shade600,
+                          onPressed: _openAchievements,
+                          icon: Icons.emoji_events,
                         ),
                       ],
                     ),

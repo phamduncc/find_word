@@ -74,4 +74,28 @@ extension DifficultyExtension on Difficulty {
         return '#F44336'; // Red
     }
   }
+
+  /// Grid columns for each difficulty
+  int get gridCols {
+    switch (this) {
+      case Difficulty.easy:
+        return 3;
+      case Difficulty.medium:
+        return 4;
+      case Difficulty.hard:
+        return 5;
+    }
+  }
+
+  /// Grid rows for each difficulty
+  int get gridRows {
+    switch (this) {
+      case Difficulty.easy:
+        return 3;
+      case Difficulty.medium:
+        return 3;
+      case Difficulty.hard:
+        return 3;
+    }
+  }
 }

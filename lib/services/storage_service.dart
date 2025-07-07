@@ -241,6 +241,64 @@ class StorageService {
     }
   }
 
+  // ==================== ACHIEVEMENTS ====================
+
+  /// Save achievements list
+  static Future<bool> saveAchievements(List<Achievement> achievements) async {
+    try {
+      final achievementsJson = json.encode(
+        achievements.map((achievement) => achievement.toJson()).toList(),
+      );
+      return await prefs.setString('achievements', achievementsJson);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Load achievements list
+  static Future<List<Achievement>> loadAchievements() async {
+    try {
+      final achievementsJson = prefs.getString('achievements');
+      if (achievementsJson != null) {
+        final achievementsList = json.decode(achievementsJson) as List;
+        return achievementsList
+            .map((json) => Achievement.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e) {
+      // Return empty list if loading fails
+    }
+    return [];
+  }
+
+  /// Save player statistics for achievements
+  static Future<bool> savePlayerStatistics(Map<String, dynamic> stats) async {
+    try {
+      final statsJson = json.encode(stats);
+      return await prefs.setString('player_statistics', statsJson);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Load player statistics for achievements
+  static Future<Map<String, dynamic>> loadPlayerStatistics() async {
+    try {
+      final statsJson = prefs.getString('player_statistics');
+      if (statsJson != null) {
+        return json.decode(statsJson) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      // Return empty stats if loading fails
+    }
+    return {
+      'totalWordsFound': 0,
+      'longestWordLength': 0,
+      'fastestWordTime': double.infinity,
+      'perfectGames': 0,
+    };
+  }
+
   // ==================== UTILITY ====================
 
   /// Clear all app data

@@ -44,6 +44,9 @@ dependencies:
   # Local storage for high scores and settings
   shared_preferences: ^2.2.2
 
+  # Haptic feedback and vibration
+  # vibration: ^1.8.4  # Temporarily disabled due to network issues
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

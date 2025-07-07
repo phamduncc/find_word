@@ -88,7 +88,12 @@ class _ResultsScreenState extends State<ResultsScreen>
 
   Future<void> _checkHighScore() async {
     final highScoreProvider = context.read<HighScoreProvider>();
+    final achievementProvider = context.read<AchievementProvider>();
+
     final isNewHighScore = await highScoreProvider.addHighScore(widget.gameSession);
+
+    // Track game completion for achievements
+    await achievementProvider.trackGameCompleted(widget.gameSession);
 
     if (mounted) {
       setState(() {
@@ -98,6 +103,12 @@ class _ResultsScreenState extends State<ResultsScreen>
       if (isNewHighScore) {
         _showHighScoreDialog();
       }
+
+      // Show achievement notifications if any were unlocked
+      for (final achievement in achievementProvider.newlyUnlocked) {
+        AchievementOverlay.show(context, achievement);
+      }
+      achievementProvider.clearNewlyUnlocked();
     }
   }
 

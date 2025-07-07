@@ -7,11 +7,13 @@ import '../services/sound_service.dart';
 import 'game_provider.dart';
 import 'settings_provider.dart';
 import 'high_score_provider.dart';
+import 'achievement_provider.dart';
 
 class AppProvider extends ChangeNotifier {
   final GameProvider gameProvider;
   final SettingsProvider settingsProvider;
   final HighScoreProvider highScoreProvider;
+  final AchievementProvider achievementProvider;
 
   bool _isInitialized = false;
   bool _isLoading = false;
@@ -21,6 +23,7 @@ class AppProvider extends ChangeNotifier {
     required this.gameProvider,
     required this.settingsProvider,
     required this.highScoreProvider,
+    required this.achievementProvider,
   });
 
   // Getters
@@ -61,6 +64,9 @@ class AppProvider extends ChangeNotifier {
 
       // Load high scores
       await highScoreProvider.loadHighScores();
+
+      // Initialize achievements
+      await achievementProvider.initializeAchievements();
 
       // Check if this is first launch
       final isFirstLaunch = await settingsProvider.isFirstLaunch();

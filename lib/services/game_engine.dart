@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 import '../models/models.dart';
+import '../models/combo_system.dart';
 import 'letter_generator.dart';
 import 'word_validator.dart';
+import 'haptic_service.dart';
 
 /// Core game engine that manages game logic and state
 class GameEngine {
@@ -60,15 +62,24 @@ class GameEngine {
   /// Update game timer
   static GameSession updateTimer(GameSession session, int newTimeRemaining) {
     if (session.state != GameState.playing) return session;
-    
+
     final updatedSession = session.copyWith(timeRemaining: newTimeRemaining);
-    
+
     // Auto-end game if time runs out
     if (newTimeRemaining <= 0) {
       return endGame(updatedSession);
     }
-    
+
     return updatedSession;
+  }
+
+  /// Add time bonus based on word score (1 point = 1 second)
+  static GameSession addTimeBonus(GameSession session, int bonusSeconds) {
+    if (session.state != GameState.playing) return session;
+
+    final newTimeRemaining = session.timeRemaining + bonusSeconds;
+
+    return session.copyWith(timeRemaining: newTimeRemaining);
   }
 
   /// Select a letter at the given index
@@ -115,67 +126,96 @@ class GameEngine {
   }
 
   /// Submit the current word
-  static GameSubmissionResult submitWord(GameSession session) {
+  static Future<GameSubmissionResult> submitWord(GameSession session, {ComboManager? comboManager}) async {
     if (session.state != GameState.playing) {
+      await HapticService.error();
       return GameSubmissionResult(
         success: false,
         message: 'Game is not active',
         updatedSession: session,
       );
     }
-    
+
     if (session.currentInput.isEmpty) {
+      await HapticService.error();
       return GameSubmissionResult(
         success: false,
         message: 'No word entered',
         updatedSession: session,
       );
     }
-    
+
     // Check if word was already found
     final alreadyFound = session.foundWords
         .any((word) => word.text == session.currentInput.toUpperCase());
-    
+
     if (alreadyFound) {
+      await HapticService.error();
       return GameSubmissionResult(
         success: false,
         message: 'Word already found',
         updatedSession: clearSelection(session),
       );
     }
-    
+
     // Validate the word
     final validation = WordValidator.validateWord(
       session.currentInput,
       session.letters,
       minLength: session.settings.difficulty.minWordLength,
     );
-    
+
     if (!validation.isValid) {
+      await HapticService.error();
       return GameSubmissionResult(
         success: false,
         message: validation.reason ?? 'Invalid word',
         updatedSession: clearSelection(session),
       );
     }
-    
+
     // Create the word and add to found words
     final word = Word.create(
       text: session.currentInput,
       letterIndices: session.selectedLetterIndices,
     );
-    
-    final updatedSession = session.copyWith(
-      foundWords: [...session.foundWords, word],
+
+    // Add word to combo system
+    comboManager?.addWord(word.text);
+    final currentCombo = comboManager?.currentCombo;
+
+    // Calculate final score with combo multiplier
+    final baseScore = word.score;
+    final multiplier = currentCombo?.multiplier ?? 1.0;
+    final finalScore = (baseScore * multiplier).round();
+    final finalWord = word.copyWith(score: finalScore);
+
+    // Add time bonus equal to final word score (1 point = 1 second)
+    final sessionWithWord = session.copyWith(
+      foundWords: [...session.foundWords, finalWord],
       selectedLetterIndices: [],
       currentInput: '',
     );
-    
+
+    final finalSession = addTimeBonus(sessionWithWord, finalScore);
+
+    // Haptic feedback based on word length and combo
+    await HapticService.wordFound(word.text.length);
+    if (currentCombo != null && currentCombo.level > 1) {
+      await HapticService.comboAchieved(currentCombo.level);
+    }
+    await HapticService.timeBonus(finalScore);
+
+    final message = currentCombo != null && currentCombo.level > 1
+        ? 'Word found! +$finalScore points (+${finalScore}s time) • ${currentCombo.multiplier.toStringAsFixed(1)}x COMBO'
+        : 'Word found! +$finalScore points (+${finalScore}s time)';
+
     return GameSubmissionResult(
       success: true,
-      message: 'Word found! +${word.score} points',
-      updatedSession: updatedSession,
-      wordFound: word,
+      message: message,
+      updatedSession: finalSession,
+      wordFound: finalWord,
+      combo: currentCombo,
     );
   }
 
@@ -256,12 +296,14 @@ class GameSubmissionResult {
   final String message;
   final GameSession updatedSession;
   final Word? wordFound;
+  final ComboStreak? combo;
 
   const GameSubmissionResult({
     required this.success,
     required this.message,
     required this.updatedSession,
     this.wordFound,
+    this.combo,
   });
 }
 

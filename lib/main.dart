@@ -4,8 +4,11 @@ import 'constants/app_constants.dart';
 import 'providers/providers.dart';
 import 'screens/screens.dart';
 import 'models/models.dart';
+import 'services/haptic_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await HapticService.initialize();
   runApp(const FindWordsApp());
 }
 
@@ -19,17 +22,20 @@ class FindWordsApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => GameProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => HighScoreProvider()),
-        ChangeNotifierProxyProvider3<GameProvider, SettingsProvider, HighScoreProvider, AppProvider>(
+        ChangeNotifierProvider(create: (_) => AchievementProvider()),
+        ChangeNotifierProxyProvider4<GameProvider, SettingsProvider, HighScoreProvider, AchievementProvider, AppProvider>(
           create: (context) => AppProvider(
             gameProvider: context.read<GameProvider>(),
             settingsProvider: context.read<SettingsProvider>(),
             highScoreProvider: context.read<HighScoreProvider>(),
+            achievementProvider: context.read<AchievementProvider>(),
           ),
-          update: (context, gameProvider, settingsProvider, highScoreProvider, appProvider) =>
+          update: (context, gameProvider, settingsProvider, highScoreProvider, achievementProvider, appProvider) =>
               appProvider ?? AppProvider(
                 gameProvider: gameProvider,
                 settingsProvider: settingsProvider,
                 highScoreProvider: highScoreProvider,
+                achievementProvider: achievementProvider,
               ),
         ),
       ],
@@ -47,6 +53,7 @@ class FindWordsApp extends StatelessWidget {
               '/game': (context) => const GameScreen(),
               '/settings': (context) => const SettingsScreen(),
               '/leaderboard': (context) => const LeaderboardScreen(),
+              '/achievements': (context) => const AchievementsScreen(),
             },
             onGenerateRoute: (settings) {
               switch (settings.name) {

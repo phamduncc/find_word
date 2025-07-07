@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../models/models.dart';
+import '../models/combo_system.dart';
 import '../services/services.dart';
 
 class GameProvider extends ChangeNotifier {
@@ -8,6 +9,7 @@ class GameProvider extends ChangeNotifier {
   Timer? _gameTimer;
   bool _isLoading = false;
   String? _errorMessage;
+  ComboManager? _comboManager;
 
   // Getters
   GameSession? get currentSession => _currentSession;
@@ -21,6 +23,8 @@ class GameProvider extends ChangeNotifier {
   String get currentInput => _currentSession?.currentInput ?? '';
   List<int> get selectedIndices => _currentSession?.selectedLetterIndices ?? [];
   List<String> get letters => _currentSession?.letters ?? [];
+  ComboStreak? get currentCombo => _comboManager?.currentCombo;
+  double get comboMultiplier => _comboManager?.currentMultiplier ?? 1.0;
 
   void _setLoading(bool loading) {
     _isLoading = loading;
@@ -40,11 +44,20 @@ class GameProvider extends ChangeNotifier {
       
       // Stop any existing timer
       _gameTimer?.cancel();
-      
+
+      // Initialize combo manager
+      _comboManager?.dispose();
+      _comboManager = ComboManager(
+        onComboStarted: (combo) => notifyListeners(),
+        onComboExtended: (combo) => notifyListeners(),
+        onComboLevelUp: (combo) => notifyListeners(),
+        onComboEnded: (combo) => notifyListeners(),
+      );
+
       // Create new game session
       _currentSession = GameEngine.createNewGame(settings);
       _currentSession = GameEngine.startGame(_currentSession!);
-      
+
       // Start game timer
       _startGameTimer();
       
@@ -123,7 +136,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     try {
-      final result = GameEngine.submitWord(_currentSession!);
+      final result = await GameEngine.submitWord(_currentSession!, comboManager: _comboManager);
       _currentSession = result.updatedSession;
       notifyListeners();
       return result;
@@ -215,6 +228,7 @@ class GameProvider extends ChangeNotifier {
   @override
   void dispose() {
     _gameTimer?.cancel();
+    _comboManager?.dispose();
     super.dispose();
   }
 }
