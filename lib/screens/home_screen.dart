@@ -86,8 +86,8 @@ class _HomeScreenState extends State<HomeScreen>
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Color(0xFFFF5722), // Orange-red like in the image
-                Color(0xFFE91E63), // Pink-red
+                AppConstants.primaryColor, // Cyan
+                AppConstants.secondaryColor, // Dark cyan
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen>
                           Container(
                             padding: const EdgeInsets.all(AppConstants.spacingL),
                             decoration: BoxDecoration(
-                              color: Colors.pink.shade600,
+                              color: AppConstants.secondaryColor,
                               borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                               boxShadow: [
                                 BoxShadow(
@@ -133,40 +133,22 @@ class _HomeScreenState extends State<HomeScreen>
                             child: Column(
                               children: [
                                 const Text(
-                                  'KING',
+                                  'FIND',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 48,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppConstants.spacingM,
-                                    vertical: AppConstants.spacingXS,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.yellow.shade600,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Text(
-                                    'OF',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
                                 const SizedBox(height: AppConstants.spacingS),
                                 Container(
                                   padding: const EdgeInsets.all(AppConstants.spacingM),
                                   decoration: BoxDecoration(
-                                    color: Colors.teal.shade600,
+                                    color: AppConstants.accentColor,
                                     borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                                   ),
                                   child: const Text(
-                                    'ENGLISH',
+                                    'WORDS',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 32,
@@ -183,45 +165,45 @@ class _HomeScreenState extends State<HomeScreen>
                           // Menu buttons
                           MenuButton(
                             text: 'START GAME',
-                            backgroundColor: Colors.yellow.shade600,
+                            backgroundColor: AppConstants.successColor,
                             onPressed: _startGame,
                             icon: Icons.play_arrow,
                           ),
-                          
-                          MenuButton(
-                            text: 'SETTINGS',
-                            backgroundColor: Colors.pink.shade600,
-                            onPressed: _openSettings,
-                            icon: Icons.settings,
-                          ),
-                          
-                          MenuButton(
-                            text: 'LEADERBOARD',
-                            backgroundColor: Colors.teal.shade600,
-                            onPressed: _openLeaderboard,
-                            icon: Icons.leaderboard,
-                          ),
-        
+
                           MenuButton(
                             text: 'ACHIEVEMENTS',
-                            backgroundColor: Colors.purple.shade600,
+                            backgroundColor: AppConstants.hardColor,
                             onPressed: _openAchievements,
                             icon: Icons.emoji_events,
                           ),
-        
+
+                          MenuButton(
+                            text: 'LEADERBOARD',
+                            backgroundColor: AppConstants.primaryColor,
+                            onPressed: _openLeaderboard,
+                            icon: Icons.leaderboard,
+                          ),
+
                           Consumer<SettingsProvider>(
                             builder: (context, settingsProvider, child) {
                               // Only show My Dictionary if Learning Mode is enabled
                               if (settingsProvider.settings.learningModeEnabled) {
                                 return MenuButton(
                                   text: 'MY DICTIONARY',
-                                  backgroundColor: Colors.indigo.shade600,
+                                  backgroundColor: AppConstants.secondaryColor,
                                   onPressed: _openMyDictionary,
                                   icon: Icons.book,
                                 );
                               }
                               return const SizedBox.shrink();
                             },
+                          ),
+
+                          MenuButton(
+                            text: 'SETTINGS',
+                            backgroundColor: AppConstants.mediumColor,
+                            onPressed: _openSettings,
+                            icon: Icons.settings,
                           ),
                         ],
                       ),

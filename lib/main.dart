@@ -106,8 +106,8 @@ class _AppInitializerState extends State<AppInitializer> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF2196F3),
-              Color(0xFF1976D2),
+              AppConstants.primaryColor,
+              AppConstants.secondaryColor,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,

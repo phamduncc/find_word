@@ -342,8 +342,8 @@ class _GameScreenState extends State<GameScreen> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF7B1FA2), // Purple like in the image
-              Color(0xFF512DA8), // Darker purple
+              AppConstants.primaryColor, // Cyan
+              AppConstants.secondaryColor, // Dark cyan
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,

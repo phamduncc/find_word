@@ -1,3 +1,4 @@
+import 'package:find_words/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import '../models/learned_word.dart';
 import '../services/my_dictionary_service.dart';
@@ -310,102 +311,12 @@ class _MyDictionaryScreenState extends State<MyDictionaryScreen>
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
-              color: _showFavoritesOnly ? Colors.red : Colors.white,
-            ),
-            onPressed: () {
-              setState(() {
-                _showFavoritesOnly = !_showFavoritesOnly;
-              });
-              _filterWords();
-            },
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) async {
-              switch (value) {
-                case 'export':
-                  _exportDictionary();
-                  break;
-                case 'clear':
-                  _clearDictionary();
-                  break;
-                case 'statistics':
-                  _showStatistics();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'statistics',
-                child: Row(
-                  children: [
-                    Icon(Icons.analytics),
-                    SizedBox(width: 8),
-                    Text('Statistics'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    Icon(Icons.download),
-                    SizedBox(width: 8),
-                    Text('Export'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    Icon(Icons.clear_all),
-                    SizedBox(width: 8),
-                    Text('Clear All'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Learning'),
-            Tab(text: 'Proficient'),
-            Tab(text: 'Mastered'),
-          ],
-          onTap: (index) {
-            setState(() {
-              switch (index) {
-                case 0:
-                  _selectedMastery = null;
-                  break;
-                case 1:
-                  _selectedMastery = 'Learning';
-                  break;
-                case 2:
-                  _selectedMastery = 'Proficient';
-                  break;
-                case 3:
-                  _selectedMastery = 'Mastered';
-                  break;
-              }
-            });
-            _filterWords();
-          },
-        ),
       ),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF673AB7), Color(0xFF3F51B5)],
+            colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -413,46 +324,85 @@ class _MyDictionaryScreenState extends State<MyDictionaryScreen>
         child: SafeArea(
           child: Column(
             children: [
+              // Statistics summary
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
+                ),
+                child: _buildStatsSummary(),
+              ),
+
               // Search bar
               Container(
-                padding: const EdgeInsets.all(16),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Search words or definitions...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged('');
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    decoration: InputDecoration(
+                      hintText: 'Search words or definitions...',
+                      hintStyle: TextStyle(color: Colors.grey.shade500),
+                      prefixIcon: Icon(Icons.search, color: Colors.grey.shade600),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(Icons.clear, color: Colors.grey.shade600),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                     ),
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
 
               // Filter chips
               Container(
-                height: 50,
+                height: 60,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+                child: Row(
                   children: [
-                    _buildFilterChip('All', _selectedFilter),
-                    _buildFilterChip('noun', _selectedFilter),
-                    _buildFilterChip('verb', _selectedFilter),
-                    _buildFilterChip('adjective', _selectedFilter),
-                    _buildFilterChip('adverb', _selectedFilter),
+                    Expanded(
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _buildFilterChip('All', _selectedFilter),
+                          _buildFilterChip('noun', _selectedFilter),
+                          _buildFilterChip('verb', _selectedFilter),
+                          _buildFilterChip('adjective', _selectedFilter),
+                          _buildFilterChip('adverb', _selectedFilter),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFavoriteToggle(),
                   ],
                 ),
               ),
@@ -505,6 +455,99 @@ class _MyDictionaryScreenState extends State<MyDictionaryScreen>
     );
   }
 
+  Widget _buildStatsSummary() {
+    final totalWords = _words.length;
+    final favoriteWords = _words.where((w) => w.isFavorite).length;
+    final masteredWords = _words.where((w) => w.masteryLevel == 'Mastered').length;
+    final needReview = _words.where((w) => w.needsReview).length;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatItem(
+            'Total',
+            totalWords.toString(),
+            Icons.library_books,
+            Colors.white,
+          ),
+        ),
+        Expanded(
+          child: _buildStatItem(
+            'Favorites',
+            favoriteWords.toString(),
+            Icons.favorite,
+            Colors.red.shade300,
+          ),
+        ),
+        Expanded(
+          child: _buildStatItem(
+            'Mastered',
+            masteredWords.toString(),
+            Icons.star,
+            Colors.yellow.shade300,
+          ),
+        ),
+        Expanded(
+          child: _buildStatItem(
+            'Review',
+            needReview.toString(),
+            Icons.refresh,
+            Colors.orange.shade300,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFavoriteToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _showFavoritesOnly ? Colors.red.shade400 : Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _showFavoritesOnly ? Colors.red.shade400 : Colors.white.withOpacity(0.3),
+        ),
+      ),
+      child: IconButton(
+        onPressed: () {
+          setState(() {
+            _showFavoritesOnly = !_showFavoritesOnly;
+          });
+          _filterWords();
+        },
+        icon: Icon(
+          Icons.favorite,
+          color: _showFavoritesOnly ? Colors.white : Colors.white70,
+        ),
+        tooltip: _showFavoritesOnly ? 'Show all words' : 'Show favorites only',
+      ),
+    );
+  }
+
   Widget _buildFilterChip(String label, String? selectedFilter) {
     final isSelected = selectedFilter == label;
     return Container(
@@ -518,91 +561,195 @@ class _MyDictionaryScreenState extends State<MyDictionaryScreen>
           });
           _filterWords();
         },
-        backgroundColor: Colors.white.withOpacity(0.2),
+        backgroundColor: Colors.white.withOpacity(0.15),
         selectedColor: Colors.white.withOpacity(0.3),
+        side: BorderSide(
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+        ),
         labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.white70,
+          color: isSelected ? Color(0xFF3F51B5) : Colors.grey,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
+        elevation: isSelected ? 4 : 0,
+        shadowColor: Colors.black.withOpacity(0.3),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.book_outlined,
-            size: 64,
-            color: Colors.white54,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _searchQuery.isNotEmpty
-                ? 'No words found matching "$_searchQuery"'
-                : 'Your dictionary is empty',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 18,
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Icon(
+                _searchQuery.isNotEmpty ? Icons.search_off : Icons.book_outlined,
+                size: 64,
+                color: Colors.white70,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _searchQuery.isNotEmpty
-                ? 'Try a different search term'
-                : 'Start playing with Learning Mode enabled to add words',
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 14,
+            const SizedBox(height: 24),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? 'No words found'
+                  : 'Your dictionary is empty',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? 'No words match "$_searchQuery"\nTry a different search term'
+                  : 'Start playing with Learning Mode enabled\nto discover and save new words',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (_searchQuery.isEmpty) ...[
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Start Playing'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppConstants.primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildWordCard(LearnedWord word) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: _getMasteryColor(word.masteryLevel),
-          child: Text(
-            word.word[0].toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        childrenPadding: const EdgeInsets.all(16),
+        leading: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                _getMasteryColor(word.masteryLevel),
+                _getMasteryColor(word.masteryLevel).withOpacity(0.7),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: _getMasteryColor(word.masteryLevel).withOpacity(0.3),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              word.word[0].toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
             ),
           ),
         ),
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                word.word,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            if (word.partOfSpeech.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  word.partOfSpeech,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    word.word,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
+                ),
+                if (word.isFavorite)
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.favorite,
+                      color: Colors.red,
+                      size: 16,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                if (word.partOfSpeech.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppConstants.mediumColor, AppConstants.hardColor],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      word.partOfSpeech,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            if (word.phonetic.isNotEmpty)
+              Text(
+                word.phonetic,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
                 ),
               ),
           ],
@@ -610,86 +757,153 @@ class _MyDictionaryScreenState extends State<MyDictionaryScreen>
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 8),
             Text(
               word.definition,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
             ),
-            const SizedBox(height: 4),
-            WordLearningProgress(
-              timesEncountered: word.timesEncountered,
-              accuracy: word.accuracy,
-              masteryLevel: word.masteryLevel,
-              isCompact: true,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactStats(word),
+                ),
+                CompactPronunciationButton(
+                  word: word.word,
+                  phonetic: word.phonetic,
+                ),
+              ],
             ),
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CompactPronunciationButton(
-              word: word.word,
-              phonetic: word.phonetic,
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: Icon(
-                word.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: word.isFavorite ? Colors.red : Colors.grey,
+        trailing: PopupMenuButton<String>(
+          icon: Icon(
+            Icons.more_vert,
+            color: Colors.grey.shade600,
+          ),
+          onSelected: (value) {
+            switch (value) {
+              case 'favorite':
+                _toggleFavorite(word);
+                break;
+              case 'remove':
+                _removeWord(word);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'favorite',
+              child: Row(
+                children: [
+                  Icon(
+                    word.isFavorite ? Icons.favorite_border : Icons.favorite,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(word.isFavorite ? 'Unfavorite' : 'Favorite'),
+                ],
               ),
-              onPressed: () => _toggleFavorite(word),
+            ),
+            const PopupMenuItem(
+              value: 'remove',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, color: Colors.red, size: 20),
+                  SizedBox(width: 8),
+                  Text('Remove'),
+                ],
+              ),
             ),
           ],
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Container(
+            padding: const EdgeInsets.all(0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (word.phonetic.isNotEmpty) ...[
-                  Text(
-                    'Pronunciation: ${word.phonetic}',
-                    style: const TextStyle(
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey,
-                    ),
+                // Full definition
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(height: 8),
-                ],
-                WordLearningProgress(
-                  timesEncountered: word.timesEncountered,
-                  accuracy: word.accuracy,
-                  masteryLevel: word.masteryLevel,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.book,
+                            color: Colors.blue.shade600,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Definition',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        word.definition,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          height: 1.5,
+                        ),
+                      ),
+                      if (word.example.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.format_quote,
+                              color: Colors.green.shade600,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Example',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          word.example,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey.shade700,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _toggleFavorite(word),
-                        icon: Icon(
-                          word.isFavorite ? Icons.favorite : Icons.favorite_border,
-                        ),
-                        label: Text(word.isFavorite ? 'Unfavorite' : 'Favorite'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: word.isFavorite ? Colors.red : Colors.grey,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _removeWord(word),
-                        icon: const Icon(Icons.delete),
-                        label: const Text('Remove'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // Detailed progress
+                _buildDetailedProgress(word),
+                const SizedBox(height: 16),
+                // Action buttons
+                _buildActionButtons(word),
               ],
             ),
           ),
@@ -698,16 +912,284 @@ class _MyDictionaryScreenState extends State<MyDictionaryScreen>
     );
   }
 
+  Widget _buildCompactStats(LearnedWord word) {
+    return Row(
+      children: [
+        _buildStatChip(
+          icon: Icons.trending_up,
+          label: '${word.accuracy.toStringAsFixed(0)}%',
+          color: _getMasteryColor(word.masteryLevel),
+        ),
+        const SizedBox(width: 8),
+        _buildStatChip(
+          icon: Icons.repeat,
+          label: '${word.timesEncountered}x',
+          color: Colors.grey.shade600,
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: _getMasteryColor(word.masteryLevel).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            word.masteryLevel,
+            style: TextStyle(
+              fontSize: 11,
+              color: _getMasteryColor(word.masteryLevel),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailedProgress(LearnedWord word) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _getMasteryColor(word.masteryLevel).withOpacity(0.1),
+            _getMasteryColor(word.masteryLevel).withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _getMasteryColor(word.masteryLevel).withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.analytics,
+                color: _getMasteryColor(word.masteryLevel),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Learning Progress',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildProgressItem(
+                  'Accuracy',
+                  '${word.accuracy.toStringAsFixed(1)}%',
+                  word.accuracy / 100,
+                  _getMasteryColor(word.masteryLevel),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildProgressItem(
+                  'Mastery',
+                  word.masteryLevel,
+                  _getMasteryProgress(word.masteryLevel),
+                  _getMasteryColor(word.masteryLevel),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoItem(
+                  'Times Seen',
+                  '${word.timesEncountered}',
+                  Icons.visibility,
+                ),
+              ),
+              Expanded(
+                child: _buildInfoItem(
+                  'Avg. Time',
+                  '${word.averageTimeToFind.toStringAsFixed(1)}s',
+                  Icons.timer,
+                ),
+              ),
+              Expanded(
+                child: _buildInfoItem(
+                  'Learned',
+                  _formatDate(word.learnedAt),
+                  Icons.calendar_today,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressItem(String label, String value, double progress, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        LinearProgressIndicator(
+          value: progress,
+          backgroundColor: Colors.grey.withOpacity(0.2),
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, size: 20, color: Colors.grey.shade600),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(LearnedWord word) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _toggleFavorite(word),
+            icon: Icon(
+              word.isFavorite ? Icons.favorite : Icons.favorite_border,
+              size: 18,
+            ),
+            label: Text(word.isFavorite ? 'Unfavorite' : 'Add to Favorites'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: word.isFavorite ? AppConstants.errorColor : AppConstants.successColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        ElevatedButton.icon(
+          onPressed: () => _removeWord(word),
+          icon: const Icon(Icons.delete, size: 18),
+          label: const Text('Remove'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppConstants.errorColor,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  double _getMasteryProgress(String masteryLevel) {
+    switch (masteryLevel.toLowerCase()) {
+      case 'mastered':
+        return 1.0;
+      case 'proficient':
+        return 0.75;
+      case 'learning':
+        return 0.5;
+      default:
+        return 0.25;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
+
+    if (difference == 0) return 'Today';
+    if (difference == 1) return 'Yesterday';
+    if (difference < 7) return '${difference}d ago';
+    if (difference < 30) return '${(difference / 7).round()}w ago';
+    return '${(difference / 30).round()}m ago';
+  }
+
   Color _getMasteryColor(String masteryLevel) {
     switch (masteryLevel.toLowerCase()) {
       case 'mastered':
-        return Colors.green;
+        return Colors.green.shade600;
       case 'proficient':
-        return Colors.blue;
+        return Colors.blue.shade600;
       case 'learning':
-        return Colors.orange;
+        return Colors.orange.shade600;
       default:
-        return Colors.grey;
+        return Colors.grey.shade600;
     }
   }
 

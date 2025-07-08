@@ -19,11 +19,11 @@ extension DifficultyExtension on Difficulty {
   int get letterCount {
     switch (this) {
       case Difficulty.easy:
-        return 9;
+        return 20;
       case Difficulty.medium:
-        return 12;
-      case Difficulty.hard:
         return 15;
+      case Difficulty.hard:
+        return 12;
     }
   }
 

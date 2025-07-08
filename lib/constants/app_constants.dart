@@ -35,17 +35,24 @@ class AppConstants {
   static const double letterTileSize = 60.0;
   static const double letterTileSpacing = 8.0;
   
-  // Colors
-  static const Color primaryColor = Color(0xFF2196F3);
-  static const Color secondaryColor = Color(0xFF03DAC6);
-  static const Color errorColor = Color(0xFFB00020);
-  static const Color successColor = Color(0xFF4CAF50);
-  static const Color warningColor = Color(0xFFFF9800);
-  
-  // Difficulty Colors
-  static const Color easyColor = Color(0xFF4CAF50);
-  static const Color mediumColor = Color(0xFFFF9800);
-  static const Color hardColor = Color(0xFFF44336);
+  // Colors - Cool & Harmonious Theme
+  static const Color primaryColor = Color(0xFF00BCD4); // Cyan
+  static const Color secondaryColor = Color(0xFF0097A7); // Dark Cyan
+  static const Color accentColor = Color(0xFF26C6DA); // Light Cyan
+  static const Color errorColor = Color(0xFFE57373); // Soft Red
+  static const Color successColor = Color(0xFF66BB6A); // Soft Green
+  static const Color warningColor = Color(0xFFFFB74D); // Soft Orange
+
+  // UI Colors
+  static const Color surfaceColor = Color(0xFFF0F9FF); // Very Light Cyan
+  static const Color cardColor = Color(0xFFFFFFFF); // White
+  static const Color textPrimaryColor = Color(0xFF263238); // Dark Blue Grey
+  static const Color textSecondaryColor = Color(0xFF546E7A); // Blue Grey
+
+  // Difficulty Colors - Harmonious with main theme
+  static const Color easyColor = Color(0xFF66BB6A); // Soft Green
+  static const Color mediumColor = Color(0xFF42A5F5); // Light Blue
+  static const Color hardColor = Color(0xFF5C6BC0); // Indigo
   
   // Text Styles
   static const TextStyle headingStyle = TextStyle(
@@ -139,12 +146,17 @@ class AppConstants {
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
-      primarySwatch: Colors.blue,
+      primarySwatch: Colors.cyan,
       primaryColor: AppConstants.primaryColor,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppConstants.primaryColor,
         brightness: Brightness.light,
+        primary: AppConstants.primaryColor,
+        secondary: AppConstants.secondaryColor,
+        surface: AppConstants.surfaceColor,
+        error: AppConstants.errorColor,
       ),
+      scaffoldBackgroundColor: AppConstants.surfaceColor,
       appBarTheme: const AppBarTheme(
         backgroundColor: AppConstants.primaryColor,
         foregroundColor: Colors.white,
