@@ -138,7 +138,6 @@ class GameProvider extends ChangeNotifier {
     try {
       final result = await GameEngine.submitWord(
         _currentSession!,
-        comboManager: _comboManager,
         gameSettings: gameSettings,
       );
       _currentSession = result.updatedSession;

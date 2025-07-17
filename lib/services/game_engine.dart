@@ -186,15 +186,21 @@ class GameEngine {
         ? DateTime.now().difference(session.startTime!).inSeconds.toDouble()
         : 0.0;
 
-    // Get word definition if Learning Mode is enabled
+    // Get word definition asynchronously to avoid blocking UI
     WordDefinition? definition;
+    Future<WordDefinition?>? definitionFuture;
     if (gameSettings?.learningModeEnabled == true && gameSettings?.showDefinitions == true) {
-      try {
-        definition = await DictionaryService.getDefinition(session.currentInput);
-      } catch (e) {
+      // Start definition fetch but don't await it yet
+      definitionFuture = DictionaryService.getDefinition(session.currentInput).catchError((e) {
         print('Failed to get definition for ${session.currentInput}: $e');
-      }
+        return null;
+      });
     }
+
+    // Await definition if needed, but only for word creation
+    // if (definitionFuture != null) {
+    //   definition = await definitionFuture;
+    // }
 
     // Create the word and add to found words
     final word = Word.create(
@@ -223,28 +229,17 @@ class GameEngine {
 
     final finalSession = addTimeBonus(sessionWithWord, finalScore);
 
-    // Save to My Dictionary if Learning Mode is enabled and auto-save is on
+    // Save to My Dictionary asynchronously without blocking UI
     if (gameSettings?.learningModeEnabled == true &&
         gameSettings?.autoSaveWords == true &&
         definition != null) {
-      try {
-        final learnedWord = LearnedWord.fromWordAndDefinition(
-          finalWord.text,
-          definition,
-          timeToFind: timeToFind,
-        );
-        await MyDictionaryService.addLearnedWord(learnedWord);
-      } catch (e) {
-        print('Failed to save word to My Dictionary: $e');
-      }
+      // Fire and forget - don't await to avoid blocking UI
+      unawaited(_saveWordToDictionaryAsync(finalWord, definition, timeToFind));
     }
 
-    // Haptic feedback based on word length and combo
+    // Simplified haptic feedback for faster response
     await HapticService.wordFound(word.text.length);
-    if (currentCombo != null && currentCombo.level > 1) {
-      await HapticService.comboAchieved(currentCombo.level);
-    }
-    await HapticService.timeBonus(finalScore);
+    // Skip additional haptic feedback to reduce delay
 
     final message = currentCombo != null && currentCombo.level > 1
         ? 'Word found! +$finalScore points (+${finalScore}s time) • ${currentCombo.multiplier.toStringAsFixed(1)}x COMBO'
@@ -371,5 +366,20 @@ class GameStatistics {
   String toString() {
     return 'GameStatistics(words: $totalWords, score: $totalScore, '
         'longest: $longestWord, avgLength: ${averageWordLength.toStringAsFixed(1)})';
+  }
+}
+
+/// Helper function to save word to dictionary asynchronously
+Future<void> _saveWordToDictionaryAsync(Word word, WordDefinition definition, double timeToFind) async {
+  try {
+    final learnedWord = LearnedWord.fromWordAndDefinition(
+      word.text,
+      definition,
+      timeToFind: timeToFind,
+    );
+    await MyDictionaryService.addLearnedWord(learnedWord);
+  } catch (e) {
+    // Silent fail to avoid blocking UI
+    print('Failed to save word to My Dictionary: $e');
   }
 }

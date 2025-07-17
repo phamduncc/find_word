@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import '../constants/app_constants.dart';
 import '../models/word.dart';
-import '../models/combo_system.dart';
+// import '../models/combo_system.dart'; // Combo display disabled
 
 /// Enhanced word found animation with multiple effects
 class WordFoundEffect extends StatefulWidget {
   final Word word;
-  final ComboStreak? combo;
+  // final ComboStreak? combo; // Combo display disabled
   final VoidCallback? onComplete;
   final Offset? position;
 
   const WordFoundEffect({
     super.key,
     required this.word,
-    this.combo,
+    // this.combo, // Combo display disabled
     this.onComplete,
     this.position,
   });
@@ -41,17 +41,17 @@ class _WordFoundEffectState extends State<WordFoundEffect>
     super.initState();
     
     _mainController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 800), // Reduced from 2000ms for faster response
       vsync: this,
     );
 
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 300), // Reduced from 600ms
       vsync: this,
     );
 
     _scoreController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 600), // Reduced from 1500ms
       vsync: this,
     );
 
@@ -124,17 +124,7 @@ class _WordFoundEffectState extends State<WordFoundEffect>
     _mainController.forward();
     _scoreController.forward();
 
-    // Pulse for combo
-    if (widget.combo != null && widget.combo!.level > 1) {
-      _pulseController.repeat(reverse: true);
-      
-      // Stop pulsing after main animation
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (mounted) {
-          _pulseController.stop();
-        }
-      });
-    }
+    // Combo pulse animation disabled
 
     _mainController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -168,9 +158,7 @@ class _WordFoundEffectState extends State<WordFoundEffect>
         _scoreController,
       ]),
       builder: (context, child) {
-        final comboScale = widget.combo != null && widget.combo!.level > 1 
-            ? _pulseAnimation.value 
-            : 1.0;
+        final comboScale = 1.0; // Combo scaling disabled
 
         return Transform.scale(
           scale: _scaleAnimation.value * comboScale,
@@ -218,17 +206,7 @@ class _WordFoundEffectState extends State<WordFoundEffect>
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          if (widget.combo != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              '${widget.combo!.multiplier.toStringAsFixed(1)}x COMBO',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                          // Combo text display disabled
                         ],
                       ),
                     ),
@@ -267,34 +245,7 @@ class _WordFoundEffectState extends State<WordFoundEffect>
                       ),
                     ),
 
-                    // Combo level indicator
-                    if (widget.combo != null && widget.combo!.level > 1)
-                      Positioned(
-                        top: -15,
-                        left: -10,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: ComboStreak.getComboColor(widget.combo!.level),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: ComboStreak.getComboColor(widget.combo!.level).withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            '${widget.combo!.level}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
+                    // Combo level indicator disabled
                   ],
                 ),
               ),
@@ -313,7 +264,7 @@ class WordFoundOverlay {
   static void show(
     BuildContext context,
     Word word, {
-    ComboStreak? combo,
+    // ComboStreak? combo, // Combo display disabled
     Offset? position,
   }) {
     hide();
@@ -330,7 +281,7 @@ class WordFoundOverlay {
         top: (position?.dy ?? defaultPosition.dy) - 50,
         child: WordFoundEffect(
           word: word,
-          combo: combo,
+          // combo: combo, // Combo display disabled
           position: position ?? defaultPosition,
           onComplete: hide,
         ),

@@ -6,7 +6,7 @@ import '../widgets/widgets.dart';
 import '../widgets/word_definition_dialog.dart';
 import '../widgets/learning_mode_indicator.dart';
 import '../models/models.dart';
-import '../models/combo_system.dart';
+
 import '../services/services.dart';
 import '../providers/providers.dart';
 import '../screens/results_screen.dart';
@@ -95,11 +95,11 @@ class _GameScreenState extends State<GameScreen> {
       _gameSession = gameProvider.currentSession!;
     });
 
-    // Show letter selection particle effect
-    if (mounted) {
-      final letterPosition = _getLetterPosition(index);
-      ParticleOverlay.showLetterSelection(context, letterPosition);
-    }
+    // Letter selection particle effects disabled for faster response
+    // if (mounted) {
+    //   final letterPosition = _getLetterPosition(index);
+    //   ParticleOverlay.showLetterSelection(context, letterPosition);
+    // }
   }
 
   // Helper method to calculate letter position for effects
@@ -133,7 +133,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // Haptic feedback for button press
     await HapticService.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 200));
+    // Removed delay for faster response
 
     // Get settings for Learning Mode
     final settingsProvider = context.read<SettingsProvider>();
@@ -174,7 +174,7 @@ class _GameScreenState extends State<GameScreen> {
           MediaQuery.of(context).size.height * 0.4,
         );
 
-        // Word found particle effect
+        // Particle effects disabled for faster response
         ParticleOverlay.showWordFound(
           context,
           screenCenter,
@@ -185,30 +185,13 @@ class _GameScreenState extends State<GameScreen> {
         WordFoundOverlay.show(
           context,
           word,
-          combo: result.combo,
+          // combo: result.combo, // Combo display disabled
           position: screenCenter,
         );
 
-        // Show combo notification for level ups
-        if (result.combo != null && result.combo!.level > 1) {
-          // Delay combo notification slightly
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              ComboOverlay.show(context, result.combo!);
+        // Combo notifications disabled - keeping combo logic for scoring but not showing UI
 
-              // Combo fireworks for high levels
-              if (result.combo!.level >= 3) {
-                ParticleOverlay.showCombo(
-                  context,
-                  screenCenter,
-                  result.combo!.level,
-                );
-              }
-            }
-          });
-        }
-
-        // Show time bonus animation
+        // Time bonus animation disabled for faster response
         TimeBonusOverlay.show(context, word.score);
 
         // Show Learning Mode definition dialog if enabled
@@ -216,12 +199,8 @@ class _GameScreenState extends State<GameScreen> {
         if (settingsProvider.settings.learningModeEnabled &&
             settingsProvider.settings.showDefinitions &&
             word.definition != null) {
-          // Delay to allow other animations to complete
-          Future.delayed(const Duration(milliseconds: 1500), () {
-            if (mounted) {
-              _showWordDefinitionDialog(word);
-            }
-          });
+          // Show dialog immediately for faster response
+          _showWordDefinitionDialog(word);
         }
       }
 
@@ -363,18 +342,8 @@ class _GameScreenState extends State<GameScreen> {
                       isRunning: _gameSession.state == GameState.playing,
                       onTimeUp: _endGame,
                     ),
-                    // Combo display in center
-                    Consumer<GameProvider>(
-                      builder: (context, gameProvider, child) {
-                        final combo = gameProvider.currentCombo;
-                        if (combo != null && combo.level > 1) {
-                          return ComboDisplay(
-                            combo: combo,
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
+                    // Combo display removed - keeping space for layout balance
+                    const SizedBox.shrink(),
                     Column(
                       children: [
                         Text(

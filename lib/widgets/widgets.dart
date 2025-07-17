@@ -13,6 +13,6 @@ export 'achievement_notification.dart';
 export 'time_bonus_animation.dart';
 export 'enhanced_game_timer.dart';
 export 'particle_system.dart';
-export 'combo_display.dart';
+// export 'combo_display.dart'; // Combo display disabled
 export 'smooth_transitions.dart';
 export 'word_found_effects.dart';
