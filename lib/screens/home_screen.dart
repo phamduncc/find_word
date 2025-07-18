@@ -66,6 +66,14 @@ class _HomeScreenState extends State<HomeScreen>
     Navigator.pushNamed(context, '/settings');
   }
 
+  void _openDailyChallenges() {
+    Navigator.pushNamed(context, '/daily-challenges');
+  }
+
+  void _openPowerupsShop() {
+    Navigator.pushNamed(context, '/powerups-shop');
+  }
+
   void _openLeaderboard() {
     Navigator.pushNamed(context, '/leaderboard');
   }
@@ -182,6 +190,20 @@ class _HomeScreenState extends State<HomeScreen>
                             backgroundColor: AppConstants.primaryColor,
                             onPressed: _openLeaderboard,
                             icon: Icons.leaderboard,
+                          ),
+
+                          MenuButton(
+                            text: 'DAILY CHALLENGES',
+                            backgroundColor: Colors.deepPurple,
+                            onPressed: _openDailyChallenges,
+                            icon: Icons.today,
+                          ),
+
+                          MenuButton(
+                            text: 'POWER-UPS SHOP',
+                            backgroundColor: Colors.deepOrange,
+                            onPressed: _openPowerupsShop,
+                            icon: Icons.flash_on,
                           ),
 
                           Consumer<SettingsProvider>(

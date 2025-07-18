@@ -16,3 +16,4 @@ export 'particle_system.dart';
 // export 'combo_display.dart'; // Combo display disabled
 export 'smooth_transitions.dart';
 export 'word_found_effects.dart';
+export 'game_powerups_panel.dart';

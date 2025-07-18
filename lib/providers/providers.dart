@@ -4,3 +4,5 @@ export 'settings_provider.dart';
 export 'high_score_provider.dart';
 export 'app_provider.dart';
 export 'achievement_provider.dart';
+export 'powerup_provider.dart';
+export 'challenge_provider.dart';

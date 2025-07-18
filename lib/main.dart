@@ -5,10 +5,12 @@ import 'providers/providers.dart';
 import 'screens/screens.dart';
 import 'models/models.dart';
 import 'services/haptic_service.dart';
+import 'services/storage_service.dart';
 import 'services/tts_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await StorageService.init();
   await HapticService.initialize();
   await TTSService.initialize();
   runApp(const FindWordsApp());
@@ -25,6 +27,8 @@ class FindWordsApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => HighScoreProvider()),
         ChangeNotifierProvider(create: (_) => AchievementProvider()),
+        ChangeNotifierProvider(create: (_) => PowerupProvider()),
+        ChangeNotifierProvider(create: (_) => ChallengeProvider()),
         ChangeNotifierProxyProvider4<GameProvider, SettingsProvider, HighScoreProvider, AchievementProvider, AppProvider>(
           create: (context) => AppProvider(
             gameProvider: context.read<GameProvider>(),
@@ -57,6 +61,8 @@ class FindWordsApp extends StatelessWidget {
               '/leaderboard': (context) => const LeaderboardScreen(),
               '/achievements': (context) => const AchievementsScreen(),
               '/my-dictionary': (context) => const MyDictionaryScreen(),
+              '/daily-challenges': (context) => const DailyChallengesScreen(),
+              '/powerups-shop': (context) => const PowerupsShopScreen(),
             },
             onGenerateRoute: (settings) {
               switch (settings.name) {

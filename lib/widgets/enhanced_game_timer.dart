@@ -174,15 +174,18 @@ class _EnhancedGameTimerState extends State<EnhancedGameTimer>
                     Icon(
                       Icons.timer,
                       color: _getTimerColor(),
-                      size: 20,
+                      size: 16,
                     ),
-                    const SizedBox(width: AppConstants.spacingXS),
-                    Text(
-                      'TIME: ${_formatTime(widget.timeRemaining)}',
-                      style: TextStyle(
-                        color: _getTimerColor(),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        _formatTime(widget.timeRemaining),
+                        style: TextStyle(
+                          color: _getTimerColor(),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -272,7 +275,6 @@ class TimerWithBonus extends StatefulWidget {
 
 class _TimerWithBonusState extends State<TimerWithBonus> {
   int? _lastTimeBonus;
-  int _previousTime = 0;
 
   @override
   void didUpdateWidget(TimerWithBonus oldWidget) {
@@ -294,8 +296,6 @@ class _TimerWithBonusState extends State<TimerWithBonus> {
         }
       });
     }
-    
-    _previousTime = oldWidget.timeRemaining;
   }
 
   @override

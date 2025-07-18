@@ -93,11 +93,19 @@ class _ResultsScreenState extends State<ResultsScreen>
   Future<void> _checkHighScore() async {
     final highScoreProvider = context.read<HighScoreProvider>();
     final achievementProvider = context.read<AchievementProvider>();
+    final powerupProvider = context.read<PowerupProvider>();
+    final challengeProvider = context.read<ChallengeProvider>();
 
     final isNewHighScore = await highScoreProvider.addHighScore(widget.gameSession);
 
     // Track game completion for achievements
     await achievementProvider.trackGameCompleted(widget.gameSession);
+
+    // Update challenge progress if in challenge mode
+    await challengeProvider.updateChallengeProgress(widget.gameSession);
+
+    // Award coins based on performance
+    await _awardCoins(powerupProvider);
 
     if (mounted) {
       setState(() {
@@ -466,6 +474,63 @@ class _ResultsScreenState extends State<ResultsScreen>
   String _formatDuration(Duration duration) {
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
-    return '${minutes}:${seconds.toString().padLeft(2, '0')}';
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  /// Award coins based on game performance
+  Future<void> _awardCoins(PowerupProvider powerupProvider) async {
+    final session = widget.gameSession;
+
+    // Base coins calculation
+    int baseCoins = session.totalScore ~/ 10; // 1 coin per 10 points
+
+    // Bonus for found words
+    int wordBonus = session.foundWords.length * 2; // 2 coins per word
+
+    // Bonus for difficulty
+    int difficultyMultiplier = 1;
+    switch (session.settings.difficulty) {
+      case Difficulty.easy:
+        difficultyMultiplier = 1;
+        break;
+      case Difficulty.medium:
+        difficultyMultiplier = 2;
+        break;
+      case Difficulty.hard:
+        difficultyMultiplier = 3;
+        break;
+    }
+
+    // Challenge mode bonus
+    int challengeBonus = 0;
+    if (session.settings.isChallengeMode) {
+      challengeBonus = 50; // Bonus for completing challenges
+    }
+
+    // Calculate total coins
+    int totalCoins = (baseCoins + wordBonus) * difficultyMultiplier + challengeBonus;
+
+    // Ensure minimum reward
+    if (totalCoins < 10) totalCoins = 10;
+
+    // Add coins to player's balance
+    await powerupProvider.addCoins(totalCoins);
+
+    // Show coins earned notification
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.monetization_on, color: Colors.yellow),
+              const SizedBox(width: 8),
+              Text('$totalCoins coins earned!'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }

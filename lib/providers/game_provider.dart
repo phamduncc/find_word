@@ -25,6 +25,7 @@ class GameProvider extends ChangeNotifier {
   List<String> get letters => _currentSession?.letters ?? [];
   ComboStreak? get currentCombo => _comboManager?.currentCombo;
   double get comboMultiplier => _comboManager?.currentMultiplier ?? 1.0;
+  ComboManager? get comboManager => _comboManager;
 
   void _setLoading(bool loading) {
     _isLoading = loading;

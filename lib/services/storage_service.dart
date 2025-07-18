@@ -19,6 +19,31 @@ class StorageService {
     return _prefs!;
   }
 
+  // ==================== GENERIC DATA METHODS ====================
+
+  /// Save generic data as JSON
+  static Future<bool> saveData(String key, Map<String, dynamic> data) async {
+    try {
+      final jsonString = json.encode(data);
+      return await prefs.setString(key, jsonString);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get generic data from JSON
+  static Future<Map<String, dynamic>?> getData(String key) async {
+    try {
+      final jsonString = prefs.getString(key);
+      if (jsonString != null) {
+        return json.decode(jsonString) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // ==================== SETTINGS ====================
 
   /// Save game settings

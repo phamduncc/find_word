@@ -11,6 +11,10 @@ class GameSettings {
   final bool autoSaveWords;
   final bool showDefinitions;
   final bool enablePronunciation;
+  final bool isChallengeMode;
+  final String? challengeId;
+  final int? targetScore;
+  final int? targetWords;
 
   const GameSettings({
     this.difficulty = Difficulty.medium,
@@ -22,6 +26,10 @@ class GameSettings {
     this.autoSaveWords = true,
     this.showDefinitions = true,
     this.enablePronunciation = true,
+    this.isChallengeMode = false,
+    this.challengeId,
+    this.targetScore,
+    this.targetWords,
   });
 
   /// Create a copy with modified values
@@ -35,6 +43,10 @@ class GameSettings {
     bool? autoSaveWords,
     bool? showDefinitions,
     bool? enablePronunciation,
+    bool? isChallengeMode,
+    String? challengeId,
+    int? targetScore,
+    int? targetWords,
   }) {
     return GameSettings(
       difficulty: difficulty ?? this.difficulty,
@@ -46,6 +58,10 @@ class GameSettings {
       autoSaveWords: autoSaveWords ?? this.autoSaveWords,
       showDefinitions: showDefinitions ?? this.showDefinitions,
       enablePronunciation: enablePronunciation ?? this.enablePronunciation,
+      isChallengeMode: isChallengeMode ?? this.isChallengeMode,
+      challengeId: challengeId ?? this.challengeId,
+      targetScore: targetScore ?? this.targetScore,
+      targetWords: targetWords ?? this.targetWords,
     );
   }
 
@@ -61,6 +77,10 @@ class GameSettings {
       'autoSaveWords': autoSaveWords,
       'showDefinitions': showDefinitions,
       'enablePronunciation': enablePronunciation,
+      'isChallengeMode': isChallengeMode,
+      'challengeId': challengeId,
+      'targetScore': targetScore,
+      'targetWords': targetWords,
     };
   }
 
@@ -76,6 +96,54 @@ class GameSettings {
       autoSaveWords: json['autoSaveWords'] as bool? ?? true,
       showDefinitions: json['showDefinitions'] as bool? ?? true,
       enablePronunciation: json['enablePronunciation'] as bool? ?? true,
+      isChallengeMode: json['isChallengeMode'] as bool? ?? false,
+      challengeId: json['challengeId'] as String?,
+      targetScore: json['targetScore'] as int?,
+      targetWords: json['targetWords'] as int?,
+    );
+  }
+
+  /// Create challenge settings from DailyChallenge
+  factory GameSettings.fromChallenge(dynamic challenge) {
+    // Extract challenge properties
+    final challengeType = challenge.type;
+    final difficulty = challenge.difficulty;
+
+    // Set targets based on challenge type
+    int? targetScore;
+    int? targetWords;
+
+    switch (challengeType) {
+      case 'score':
+        targetScore = challenge.target;
+        break;
+      case 'words':
+        targetWords = challenge.target;
+        break;
+      case 'time':
+        // Time challenges use default targets but shorter time
+        targetScore = 100;
+        break;
+      case 'streak':
+        targetWords = 5;
+        break;
+    }
+
+    return GameSettings(
+      difficulty: difficulty,
+      isChallengeMode: true,
+      challengeId: challenge.id,
+      targetScore: targetScore,
+      targetWords: targetWords,
+      // Use default settings for other properties
+      soundEnabled: true,
+      vibrationEnabled: true,
+      showHints: true,
+      playerName: 'Player',
+      learningModeEnabled: false,
+      autoSaveWords: true,
+      showDefinitions: true,
+      enablePronunciation: true,
     );
   }
 

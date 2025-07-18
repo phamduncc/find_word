@@ -6,6 +6,7 @@ import '../widgets/widgets.dart';
 import '../widgets/word_definition_dialog.dart';
 import '../widgets/learning_mode_indicator.dart';
 import '../models/models.dart';
+import '../models/power_up.dart';
 
 import '../services/services.dart';
 import '../providers/providers.dart';
@@ -21,11 +22,13 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late GameSession _gameSession;
+  GameSession? _gameSession;
   Timer? _gameTimer;
   bool _isSubmitting = false;
   bool _isInitialized = false;
   DateTime? _wordStartTime;
+  bool _isTimerFrozen = false;
+  Timer? _freezeTimer;
 
   @override
   void initState() {
@@ -36,8 +39,11 @@ class _GameScreenState extends State<GameScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInitialized) {
-      _initializeGame();
-      _startGameTimer();
+      // Defer initialization to avoid calling setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeGame();
+        _startGameTimer();
+      });
       _isInitialized = true;
     }
   }
@@ -45,12 +51,17 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     _gameTimer?.cancel();
+    _freezeTimer?.cancel();
     super.dispose();
   }
 
   void _initializeGame() {
     // Get settings from route arguments or widget parameter
-    final routeSettings = ModalRoute.of(context)?.settings.arguments as GameSettings?;
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    GameSettings? routeSettings;
+    if (routeArgs is GameSettings) {
+      routeSettings = routeArgs;
+    }
     final settings = routeSettings ?? widget.settings ?? const GameSettings();
 
     final gameProvider = context.read<GameProvider>();
@@ -60,15 +71,16 @@ class _GameScreenState extends State<GameScreen> {
 
   void _startGameTimer() {
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_gameSession.state == GameState.playing) {
+      final session = _gameSession;
+      if (session != null && session.state == GameState.playing && !_isTimerFrozen) {
         setState(() {
           _gameSession = GameEngine.updateTimer(
-            _gameSession,
-            _gameSession.timeRemaining - 1,
+            session,
+            session.timeRemaining - 1,
           );
         });
 
-        if (_gameSession.timeRemaining <= 0) {
+        if (_gameSession!.timeRemaining <= 0) {
           _endGame();
         }
       }
@@ -106,7 +118,7 @@ class _GameScreenState extends State<GameScreen> {
   Offset _getLetterPosition(int index) {
     final screenSize = MediaQuery.of(context).size;
     final gridWidth = screenSize.width - 32; // Account for padding
-    final difficulty = _gameSession.settings.difficulty;
+    final difficulty = _gameSession?.settings.difficulty ?? Difficulty.easy;
 
     final cols = difficulty.gridCols;
     final rows = difficulty.gridRows;
@@ -288,34 +300,411 @@ class _GameScreenState extends State<GameScreen> {
 
     // Use postFrameCallback to avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final session = _gameSession;
+      if (session != null) {
+        setState(() {
+          _gameSession = GameEngine.endGame(session);
+        });
+
+        // Navigate to results screen with smooth transition
+        Navigator.of(context).pushReplacement(
+          SmoothPageRoute(
+            child: ResultsScreen(gameSession: _gameSession!),
+            transitionType: TransitionType.slideFromBottom,
+          ),
+        );
+      }
+    });
+  }
+
+  /// Handle power-up effects when used
+  void _handlePowerupEffects() {
+    final powerupProvider = context.read<PowerupProvider>();
+    final gameProvider = context.read<GameProvider>();
+
+    // Check for active power-up effects and apply them
+    final activeEffects = powerupProvider.getActiveEffects();
+
+    for (final effect in activeEffects) {
+      if (effect.isConsumed) continue;
+
+      switch (effect.type) {
+        case PowerUpType.timeFreeze:
+          // Pause the game timer for the duration
+          _pauseTimerForDuration(effect);
+          break;
+
+        case PowerUpType.extraTime:
+          // Add 30 seconds to timer
+          _addExtraTime(30);
+          powerupProvider.consumePowerUpEffect(PowerUpType.extraTime);
+          break;
+
+        case PowerUpType.wordHint:
+          // Show a hint word
+          _showWordHint();
+          powerupProvider.consumePowerUpEffect(PowerUpType.wordHint);
+          break;
+
+        case PowerUpType.letterShuffle:
+          // Shuffle the letters
+          _shuffleLetters();
+          powerupProvider.consumePowerUpEffect(PowerUpType.letterShuffle);
+          break;
+
+        case PowerUpType.doublePoints:
+          // Double points effect is handled in scoring logic
+          break;
+
+        case PowerUpType.comboBoost:
+          // Boost combo multiplier
+          _boostCombo();
+          powerupProvider.consumePowerUpEffect(PowerUpType.comboBoost);
+          break;
+
+        case PowerUpType.clearMistakes:
+          // Clear mistakes/penalties
+          _clearMistakes();
+          powerupProvider.consumePowerUpEffect(PowerUpType.clearMistakes);
+          break;
+
+        case PowerUpType.xrayVision:
+          // Highlight possible words (visual effect)
+          _activateXrayVision(effect);
+          break;
+      }
+    }
+
+    setState(() {
+      // Refresh UI after applying effects
+    });
+  }
+
+  /// Pause timer for duration (Time Freeze power-up)
+  void _pauseTimerForDuration(PowerUpEffect effect) {
+    final duration = PowerUpConfig.getConfig(effect.type).duration;
+    print('⏸️ Time Freeze activated for $duration seconds');
+
+    // Freeze the timer
+    _isTimerFrozen = true;
+
+    // Show freeze effect
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.pause, color: Colors.white),
+            const SizedBox(width: 8),
+            Text('⏸️ Timer frozen for ${duration}s!'),
+          ],
+        ),
+        backgroundColor: Colors.blue,
+        duration: Duration(seconds: duration),
+      ),
+    );
+
+    // Unfreeze after duration
+    _freezeTimer?.cancel();
+    _freezeTimer = Timer(Duration(seconds: duration), () {
+      _isTimerFrozen = false;
+      print('⏸️ Time Freeze ended');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('⏸️ Timer resumed!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    });
+  }
+
+  /// Add extra time to the game timer
+  void _addExtraTime(int seconds) {
+    final gameProvider = context.read<GameProvider>();
+    final session = _gameSession;
+    if (gameProvider.currentSession != null && session != null) {
+      // Add time through GameProvider
       setState(() {
-        _gameSession = GameEngine.endGame(_gameSession);
+        _gameSession = GameEngine.addTimeBonus(session, seconds);
       });
 
-      // Navigate to results screen with smooth transition
-      Navigator.of(context).pushReplacement(
-        SmoothPageRoute(
-          child: ResultsScreen(gameSession: _gameSession),
-          transitionType: TransitionType.slideFromBottom,
+      print('⏰ Added $seconds seconds to timer');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⏰ +$seconds seconds added!'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
         ),
       );
+    }
+  }
+
+  /// Show word hint
+  void _showWordHint() {
+    final gameProvider = context.read<GameProvider>();
+    final hints = gameProvider.getHintWords(maxHints: 1);
+
+    if (hints.isNotEmpty) {
+      final hint = hints.first;
+      print('💡 Word hint: $hint');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('💡 Hint: Try "$hint"'),
+          backgroundColor: Colors.yellow.shade700,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('💡 No hints available'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  /// Shuffle letters
+  void _shuffleLetters() {
+    final session = _gameSession;
+    if (session == null) return;
+
+    print('🔀 Letters shuffled');
+
+    // Create a new shuffled list of letters
+    final shuffledLetters = List<String>.from(session.letters);
+    shuffledLetters.shuffle();
+
+    // Update game session with shuffled letters
+    setState(() {
+      _gameSession = session.copyWith(letters: shuffledLetters);
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.shuffle, color: Colors.white),
+            SizedBox(width: 8),
+            Text('🔀 Letters shuffled for new perspective!'),
+          ],
+        ),
+        backgroundColor: Colors.purple,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// Boost combo multiplier
+  void _boostCombo() {
+    final gameProvider = context.read<GameProvider>();
+    final comboManager = gameProvider.comboManager;
+
+    if (comboManager != null) {
+      // Force start a combo if none exists, or boost existing combo
+      if (!comboManager.hasActiveCombo) {
+        // Start a combo with a dummy word to activate the system
+        comboManager.addWord('BOOST');
+        print('📈 Combo system activated with boost!');
+      } else {
+        // Add an extra word to boost existing combo
+        comboManager.addWord('BOOST');
+        print('📈 Existing combo boosted! New multiplier: ${comboManager.currentMultiplier}x');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.trending_up, color: Colors.white),
+              const SizedBox(width: 8),
+              Text('📈 Combo boosted! ${comboManager.currentMultiplier.toStringAsFixed(1)}x multiplier'),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('📈 Combo system not available'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  /// Clear mistakes/penalties
+  void _clearMistakes() {
+    final gameProvider = context.read<GameProvider>();
+    final comboManager = gameProvider.comboManager;
+
+    print('❌ Mistakes cleared');
+
+    // Reset combo timer to give more time
+    if (comboManager != null && comboManager.hasActiveCombo) {
+      // Force extend combo time by adding a "clear" word
+      comboManager.addWord('CLEAR');
+      print('❌ Combo timer reset and extended');
+    }
+
+    // Clear current input if there's an invalid attempt
+    final session = _gameSession;
+    if (session != null && session.currentInput.isNotEmpty) {
+      setState(() {
+        _gameSession = session.copyWith(
+          currentInput: '',
+          selectedLetterIndices: [],
+        );
+      });
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.clear, color: Colors.white),
+            SizedBox(width: 8),
+            Text('❌ Mistakes cleared! Fresh start!'),
+          ],
+        ),
+        backgroundColor: Colors.teal,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// Activate X-ray vision
+  void _activateXrayVision(PowerUpEffect effect) {
+    final gameProvider = context.read<GameProvider>();
+    final hints = gameProvider.getHintWords(maxHints: 5);
+
+    print('👁️ X-ray vision activated - showing ${hints.length} possible words');
+
+    if (hints.isNotEmpty) {
+      // Show dialog with possible words
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.indigo.shade900,
+          title: const Row(
+            children: [
+              Icon(Icons.visibility, color: Colors.white),
+              SizedBox(width: 8),
+              Text(
+                '👁️ X-Ray Vision',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Possible words you can make:',
+                style: TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 12),
+              ...hints.map((word) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  '• $word',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              )),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Got it!',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('👁️ No more words to discover!'),
+          backgroundColor: Colors.indigo,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _pauseGame() {
-    setState(() {
-      _gameSession = GameEngine.pauseGame(_gameSession);
-    });
+    final session = _gameSession;
+    if (session != null) {
+      setState(() {
+        _gameSession = GameEngine.pauseGame(session);
+      });
+    }
   }
 
   void _resumeGame() {
-    setState(() {
-      _gameSession = GameEngine.resumeGame(_gameSession);
-    });
+    final session = _gameSession;
+    if (session != null) {
+      setState(() {
+        _gameSession = GameEngine.resumeGame(session);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading if game session is not initialized
+    if (_gameSession == null) {
+      return Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppConstants.primaryColor,
+                AppConstants.secondaryColor,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(color: Colors.white),
+                SizedBox(height: 16),
+                Text(
+                  'Initializing Game...',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final gameSession = _gameSession!;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -331,44 +720,63 @@ class _GameScreenState extends State<GameScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // Top bar with timer, score, and combo
-              Container(
-                padding: const EdgeInsets.all(AppConstants.spacingM),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TimerWithBonus(
-                      timeRemaining: _gameSession.timeRemaining,
-                      isRunning: _gameSession.state == GameState.playing,
-                      onTimeUp: _endGame,
-                    ),
-                    // Combo display removed - keeping space for layout balance
-                    const SizedBox.shrink(),
-                    Column(
+                  // Top bar with timer, score, and power-ups
+                  Container(
+                    padding: const EdgeInsets.all(AppConstants.spacingM),
+                    child: Row(
                       children: [
-                        Text(
-                          'SCORE: ${_gameSession.totalScore}',
-                          style: const TextStyle(
-                            color: Colors.yellow,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        // Timer - flexible to take needed space
+                        Flexible(
+                          flex: 2,
+                          child: TimerWithBonus(
+                            timeRemaining: gameSession.timeRemaining,
+                            isRunning: gameSession.state == GameState.playing,
+                            onTimeUp: _endGame,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Consumer<SettingsProvider>(
-                          builder: (context, settingsProvider, child) {
-                            return LearningModeIndicator(
-                              isEnabled: settingsProvider.settings.learningModeEnabled,
-                              showLabel: false,
-                              size: 16,
-                            );
-                          },
+                        const SizedBox(width: 8),
+                        // Power-ups panel - flexible to take needed space
+                        Flexible(
+                          flex: 3,
+                          child: GamePowerupsPanel(
+                            onPowerupUsed: () {
+                              _handlePowerupEffects();
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Score - flexible to take remaining space
+                        Flexible(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'SCORE: ${gameSession.totalScore}',
+                                style: const TextStyle(
+                                  color: Colors.yellow,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            const SizedBox(height: 4),
+                            Consumer<SettingsProvider>(
+                              builder: (context, settingsProvider, child) {
+                                return LearningModeIndicator(
+                                  isEnabled: settingsProvider.settings.learningModeEnabled,
+                                  showLabel: false,
+                                  size: 16,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
               // Letter grid
               Expanded(
@@ -482,13 +890,13 @@ class _GameScreenState extends State<GameScreen> {
               Expanded(
                 flex: 1,
                 child: AnimatedList(
-                  key: ValueKey(_gameSession.foundWords.length),
-                  initialItemCount: _gameSession.foundWords.length,
+                  key: ValueKey(gameSession.foundWords.length),
+                  initialItemCount: gameSession.foundWords.length,
                   itemBuilder: (context, index, animation) {
-                    if (index >= _gameSession.foundWords.length) {
+                    if (index >= gameSession.foundWords.length) {
                       return const SizedBox.shrink();
                     }
-                    final word = _gameSession.foundWords[index];
+                    final word = gameSession.foundWords[index];
                     return SmoothListItem(
                       index: index,
                       child: WordHighlightEffect(
