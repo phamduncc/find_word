@@ -109,28 +109,15 @@ class GamePowerupsPanel extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         // Power-up info
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                powerup.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                'Quantity: ${powerup.quantity}',
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
+                        Expanded(
+                          child: Text(
+                            powerup.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8),
